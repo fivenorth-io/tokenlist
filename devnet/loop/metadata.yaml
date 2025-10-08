@@ -1,0 +1,7 @@
+- name: Loop
+  instrument_admin: fivenorth-devnet-1::12208c929c3f012c663323ed675b2eaea7d7c6e1a9be35d6b20bc39f311c6aa7cc54
+  instrument_admin:
+  - id: LOOP
+    website: https://cantonloop.com
+    logo:
+      default: https://raw.githubusercontent.com/fivenorth-io/tokenlist/refs/heads/main/devnet/loop/logo.svg
