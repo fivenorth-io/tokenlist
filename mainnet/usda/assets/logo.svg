@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="USDA">
+  <circle cx="512" cy="512" r="512" fill="#151515"/>
+  <path fill="none" stroke="#fff" stroke-width="27" stroke-miterlimit="10" d="M552 179v92H394l-59 58v88l323 348h78l58-58v-88L443 271"/>
+  <path fill="none" stroke="#fff" stroke-width="27" stroke-miterlimit="10" d="M335 623v150h84l317-1M683 272h41l56 56v91M724 255v107"/>
+  <path stroke="#fff" stroke-width="27" stroke-miterlimit="10" d="M499 773v87"/>
+</svg>
