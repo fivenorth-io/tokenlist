@@ -121,6 +121,57 @@ func ValidateTransition(previous, current []Entry) error {
 	return nil
 }
 
+// ReadIdentities reads the base revision without applying current metadata or logo rules.
+func ReadIdentities(root fs.FS) ([]Entry, error) {
+	var entries []Entry
+	err := fs.WalkDir(root, ".", func(filename string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() && filename == ".git" {
+			return fs.SkipDir
+		}
+		if d.Type()&fs.ModeSymlink != 0 {
+			return fmt.Errorf("%s: symlinks are not allowed", filename)
+		}
+		if d.IsDir() || d.Name() != "info.json" {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() || info.Size() > 64<<10 {
+			return fmt.Errorf("%s: invalid metadata file", filename)
+		}
+		data, err := fs.ReadFile(root, filename)
+		if err != nil {
+			return err
+		}
+		var identity struct {
+			Network      string `json:"network"`
+			AssetKey     string `json:"assetKey"`
+			AdminParty   string `json:"adminParty"`
+			InstrumentID string `json:"instrumentId"`
+		}
+		if err := json.Unmarshal(data, &identity); err != nil {
+			return fmt.Errorf("%s: %w", filename, err)
+		}
+		parts := strings.Split(filename, "/")
+		if !safePath(filename) || len(parts) != 3 || parts[0] != identity.Network {
+			return fmt.Errorf("%s: invalid identity path", filename)
+		}
+		for _, field := range []string{identity.Network, identity.AssetKey, identity.AdminParty, identity.InstrumentID} {
+			if strings.TrimSpace(field) == "" || strings.ContainsRune(field, 0) {
+				return fmt.Errorf("%s: missing or invalid identity field", filename)
+			}
+		}
+		entries = append(entries, Entry{Path: filename, Network: identity.Network, AssetKey: identity.AssetKey, AdminParty: identity.AdminParty, InstrumentID: identity.InstrumentID})
+		return nil
+	})
+	return entries, err
+}
+
 // ValidateRepository checks all info.json files and referenced logos. Legacy logo-only folders are allowed.
 func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 	var entries []Entry

@@ -28,7 +28,7 @@ func run(root, base string) error {
 		return err
 	}
 	if base != "" {
-		previous, err := v.ValidateRepository(os.DirFS(base))
+		previous, err := validator.ReadIdentities(os.DirFS(base))
 		if err != nil {
 			return fmt.Errorf("base registry: %w", err)
 		}

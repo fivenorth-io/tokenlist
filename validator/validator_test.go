@@ -173,6 +173,63 @@ func TestSetAndTransition(t *testing.T) {
 	}
 }
 
+func TestReadIdentitiesIgnoresNewMetadataRules(t *testing.T) {
+	v := newValidator(t)
+	old := metadata(t, func(m map[string]any) {
+		m["oldField"] = true
+		m["website"] = "http://old.example.com"
+		m["pricing"] = "old pricing format"
+		m["logo"] = "missing.svg"
+	})
+	root := fstest.MapFS{"testnet/beth/info.json": {Data: old}}
+	if _, err := v.ValidateRepository(root); err == nil {
+		t.Fatal("fixture should fail current validation")
+	}
+	previous, err := ReadIdentities(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	current, err := v.Validate("testnet/beth/info.json", metadata(t, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidateTransition(previous, []Entry{current}); err != nil {
+		t.Fatal(err)
+	}
+	if ValidateTransition(previous, nil) == nil {
+		t.Fatal("accepted removal")
+	}
+	renamed := current
+	renamed.AssetKey = "renamed"
+	if ValidateTransition(previous, []Entry{renamed}) == nil {
+		t.Fatal("accepted key rename")
+	}
+	changed := current
+	changed.AdminParty = "different"
+	if ValidateTransition(previous, []Entry{changed}) == nil {
+		t.Fatal("accepted identity change")
+	}
+}
+
+func TestReadIdentitiesRejectsUnreadableIdentity(t *testing.T) {
+	for name, body := range map[string][]byte{
+		"malformed JSON": []byte(`{`),
+		"missing field":  metadata(t, func(m map[string]any) { delete(m, "assetKey") }),
+		"null field":     metadata(t, func(m map[string]any) { m["adminParty"] = nil }),
+		"wrong type":     metadata(t, func(m map[string]any) { m["instrumentId"] = 1 }),
+		"wrong folder":   metadata(t, func(m map[string]any) { m["network"] = "mainnet" }),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := ReadIdentities(fstest.MapFS{"testnet/beth/info.json": {Data: body}}); err == nil {
+				t.Fatal("accepted unreadable base identity")
+			}
+		})
+	}
+	if entries, err := ReadIdentities(fstest.MapFS{"testnet/beth/logo.png": {Data: []byte("logo")}}); err != nil || len(entries) != 0 {
+		t.Fatalf("logo-only base: %v, %v", entries, err)
+	}
+}
+
 func TestIntegerEncoding(t *testing.T) {
 	v := newValidator(t)
 	for _, field := range []string{"schemaVersion", "decimals"} {
