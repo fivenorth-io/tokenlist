@@ -10,7 +10,7 @@ import (
 func TestRunValidatesCurrentButOnlyReadsBaseIdentities(t *testing.T) {
 	base, current := t.TempDir(), t.TempDir()
 	identity := `"network":"testnet","assetKey":"BETH","adminParty":"issuer::1220` + strings.Repeat("a", 64) + `","instrumentId":"BETH"`
-	old := `{` + identity + `,"website":"http://old.example.com","oldField":true}`
+	old := `{` + identity + `,"decimals":10,"website":"http://old.example.com","oldField":true}`
 	valid := `{` + identity + `,"schemaVersion":1,"issuerName":"Issuer","name":"BETH","symbol":"BETH","decimals":10,"logo":"logo.png","website":"https://example.com","registryUrl":"https://example.com/registry","wallet":{"enabled":true,"visibleByDefault":true},"data":{"listed":true},"pricing":{"type":"none"}}`
 	write := func(root, name, content string) {
 		t.Helper()
@@ -35,5 +35,9 @@ func TestRunValidatesCurrentButOnlyReadsBaseIdentities(t *testing.T) {
 	write(current, "info.json", strings.Replace(valid, `"assetKey":"BETH"`, `"assetKey":"RENAMED"`, 1))
 	if err := run(current, base); err == nil {
 		t.Fatal("accepted rename against base identity")
+	}
+	write(current, "info.json", strings.Replace(valid, `"decimals":10`, `"decimals":6`, 1))
+	if err := run(current, base); err == nil {
+		t.Fatal("accepted changed decimals against base metadata")
 	}
 }

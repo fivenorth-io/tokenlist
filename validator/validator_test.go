@@ -260,6 +260,43 @@ func TestLogoSize(t *testing.T) {
 	}
 }
 
+func TestDecimalsAreStable(t *testing.T) {
+	v := newValidator(t)
+	for _, precision := range []int{0, 10} {
+		data := metadata(t, func(m map[string]any) { m["decimals"] = precision })
+		previous, err := ReadIdentities(fstest.MapFS{"testnet/beth/info.json": {Data: data}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		current, err := v.Validate("testnet/beth/info.json", data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if current.Decimals != int64(precision) || previous[0].Decimals != int64(precision) {
+			t.Fatal("decimals were not preserved")
+		}
+		if err := ValidateTransition(previous, []Entry{current}); err != nil {
+			t.Fatal(err)
+		}
+		current.Decimals = 6
+		if ValidateTransition(previous, []Entry{current}) == nil {
+			t.Fatal("accepted decimals change")
+		}
+		if err := ValidateTransition(nil, []Entry{current}); err != nil {
+			t.Fatal("new assets may choose decimals", err)
+		}
+	}
+	for _, mutate := range []func(map[string]any){
+		func(m map[string]any) { delete(m, "decimals") },
+		func(m map[string]any) { m["decimals"] = nil },
+		func(m map[string]any) { m["decimals"] = "10" },
+	} {
+		if _, err := ReadIdentities(fstest.MapFS{"testnet/beth/info.json": {Data: metadata(t, mutate)}}); err == nil {
+			t.Fatal("accepted missing or invalid base decimals")
+		}
+	}
+}
+
 func TestPricingMultiplier(t *testing.T) {
 	v := newValidator(t)
 	for _, value := range []any{"0", "-1", "1e2", "", "NaN", 1, nil} {

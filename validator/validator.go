@@ -22,6 +22,7 @@ type Entry struct {
 	IssuerName   string
 	RegistryURL  string
 	Logo         string
+	Decimals     int64
 }
 
 type Validator struct{ schema *jsonschema.Schema }
@@ -63,6 +64,7 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	}
 	fields := value.(map[string]any)
 	entry = Entry{Path: filename, Network: fields["network"].(string), AssetKey: fields["assetKey"].(string), AdminParty: fields["adminParty"].(string), InstrumentID: fields["instrumentId"].(string), IssuerName: fields["issuerName"].(string), RegistryURL: fields["registryUrl"].(string), Logo: fields["logo"].(string)}
+	entry.Decimals = *integers.Decimals
 	parts := strings.Split(filename, "/")
 	if !safePath(filename) || len(parts) != 3 || parts[0] != entry.Network || parts[2] != "info.json" {
 		return entry, fmt.Errorf("%s: expected <network>/<asset>/info.json matching network", filename)
@@ -106,7 +108,7 @@ func ValidateSet(entries []Entry) error {
 	return nil
 }
 
-// ValidateTransition preserves public keys and on-chain identities during migration.
+// ValidateTransition preserves public keys, on-chain identities, and decimals.
 func ValidateTransition(previous, current []Entry) error {
 	identities := map[string]Entry{}
 	for _, e := range current {
@@ -116,6 +118,9 @@ func ValidateTransition(previous, current []Entry) error {
 		next, ok := identities[e.Network+"\x00"+e.AdminParty+"\x00"+e.InstrumentID]
 		if !ok || next.AssetKey != e.AssetKey {
 			return fmt.Errorf("%s: asset removed, identity changed, or assetKey renamed; disable instead", e.Path)
+		}
+		if next.Decimals != e.Decimals {
+			return fmt.Errorf("%s: decimals cannot change for an existing asset", e.Path)
 		}
 	}
 	return nil
@@ -153,9 +158,13 @@ func ReadIdentities(root fs.FS) ([]Entry, error) {
 			AssetKey     string `json:"assetKey"`
 			AdminParty   string `json:"adminParty"`
 			InstrumentID string `json:"instrumentId"`
+			Decimals     *int64 `json:"decimals"`
 		}
 		if err := json.Unmarshal(data, &identity); err != nil {
 			return fmt.Errorf("%s: %w", filename, err)
+		}
+		if identity.Decimals == nil {
+			return fmt.Errorf("%s: missing base decimals", filename)
 		}
 		parts := strings.Split(filename, "/")
 		if !safePath(filename) || len(parts) != 3 || parts[0] != identity.Network {
@@ -166,7 +175,7 @@ func ReadIdentities(root fs.FS) ([]Entry, error) {
 				return fmt.Errorf("%s: missing or invalid identity field", filename)
 			}
 		}
-		entries = append(entries, Entry{Path: filename, Network: identity.Network, AssetKey: identity.AssetKey, AdminParty: identity.AdminParty, InstrumentID: identity.InstrumentID})
+		entries = append(entries, Entry{Path: filename, Network: identity.Network, AssetKey: identity.AssetKey, AdminParty: identity.AdminParty, InstrumentID: identity.InstrumentID, Decimals: *identity.Decimals})
 		return nil
 	})
 	return entries, err
