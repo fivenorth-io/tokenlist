@@ -14,7 +14,7 @@
     "name": {"$ref": "#/definitions/text"},
     "symbol": {"$ref": "#/definitions/text"},
     "decimals": {"type": "integer", "minimum": 0, "maximum": 10, "description": "Use integer notation."},
-    "logo": {"type": "string", "minLength": 1},
+    "logo": {"type": "string", "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
     "website": {"$ref": "#/definitions/https"},
     "registryUrl": {"$ref": "#/definitions/https"},
     "wallet": {

@@ -1,7 +1,10 @@
 package validator
 
 import (
+	"bytes"
 	"encoding/json"
+	"image"
+	"image/png"
 	"io/fs"
 	"strings"
 	"testing"
@@ -73,6 +76,8 @@ func TestInvalidMetadata(t *testing.T) {
 		"unsafe logo":         func(m map[string]any) { m["logo"] = "../logo.png" },
 		"encoded logo":        func(m map[string]any) { m["logo"] = "%2e%2e/logo.png" },
 		"logo extension":      func(m map[string]any) { m["logo"] = "logo.html" },
+		"SVG logo":            func(m map[string]any) { m["logo"] = "logo.svg" },
+		"JPEG logo":           func(m map[string]any) { m["logo"] = "logo.jpeg" },
 		"invalid URL":         func(m map[string]any) { m["website"] = "http://example.com" },
 		"URL credentials":     func(m map[string]any) { m["registryUrl"] = "https://user:secret@example.com" },
 		"comma key":           func(m map[string]any) { m["assetKey"] = "A,B" },
@@ -103,7 +108,7 @@ func TestRepository(t *testing.T) {
 	v := newValidator(t)
 	root := fstest.MapFS{
 		"testnet/beth/info.json":         {Data: metadata(t, nil)},
-		"testnet/beth/assets/logo.png":   {Data: []byte("logo")},
+		"testnet/beth/assets/logo.png":   {Data: testPNG(t, 256, 256)},
 		"mainnet/legacy/assets/logo.png": {Data: []byte("legacy")},
 	}
 	entries, err := v.ValidateRepository(root)
@@ -244,11 +249,52 @@ func TestIntegerEncoding(t *testing.T) {
 	}
 }
 
+func testPNG(t *testing.T, width, height int) []byte {
+	t.Helper()
+	var buffer bytes.Buffer
+	if err := png.Encode(&buffer, image.NewNRGBA(image.Rect(0, 0, width, height))); err != nil {
+		t.Fatal(err)
+	}
+	return buffer.Bytes()
+}
+
+func TestPNGContent(t *testing.T) {
+	v := newValidator(t)
+	valid := testPNG(t, 256, 256)
+	for _, tc := range []struct {
+		name  string
+		body  []byte
+		valid bool
+	}{
+		{"minimum", testPNG(t, 128, 128), true},
+		{"maximum", testPNG(t, 1024, 1024), true},
+		{"small", testPNG(t, 127, 127), false},
+		{"large", testPNG(t, 1025, 1025), false},
+		{"not square", testPNG(t, 256, 128), false},
+		{"renamed SVG", []byte(`<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>`), false},
+		{"truncated image", valid[:len(valid)-15], false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := v.ValidateRepository(fstest.MapFS{
+				"testnet/beth/info.json":       {Data: metadata(t, nil)},
+				"testnet/beth/assets/logo.png": {Data: tc.body},
+			})
+			if (err == nil) != tc.valid {
+				t.Fatalf("valid=%v, err=%v", tc.valid, err)
+			}
+		})
+	}
+	if _, err := v.ValidateRepository(fstest.MapFS{"mainnet/legacy/logo.svg": {Data: []byte(`<svg/>`)}}); err != nil {
+		t.Fatal("unreferenced legacy SVG must remain allowed", err)
+	}
+}
+
 func TestLogoSize(t *testing.T) {
 	v := newValidator(t)
 	for _, size := range []int{maxLogoBytes, maxLogoBytes + 1} {
 		for _, referenced := range []bool{false, true} {
 			root := fstest.MapFS{"testnet/beth/assets/logo.png": {Data: make([]byte, size)}}
+			copy(root["testnet/beth/assets/logo.png"].Data, testPNG(t, 128, 128))
 			if referenced {
 				root["testnet/beth/info.json"] = &fstest.MapFile{Data: metadata(t, nil)}
 			}
@@ -314,7 +360,7 @@ func TestRepositoryPaths(t *testing.T) {
 	for _, logo := range []string{"logo.png", "assets/logo.png"} {
 		root := fstest.MapFS{
 			"testnet/beth/info.json": {Data: metadata(t, func(m map[string]any) { m["logo"] = logo })},
-			"testnet/beth/" + logo:   {Data: []byte("logo")},
+			"testnet/beth/" + logo:   {Data: testPNG(t, 256, 256)},
 		}
 		if _, err := v.ValidateRepository(root); err != nil {
 			t.Fatal(err)

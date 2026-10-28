@@ -2,8 +2,11 @@
 package validator
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"image/png"
+	"io"
 	"io/fs"
 	"net/url"
 	"path"
@@ -72,10 +75,8 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	if !safePath(entry.Logo) {
 		return entry, fmt.Errorf("%s: unsafe relative logo path", filename)
 	}
-	switch strings.ToLower(path.Ext(entry.Logo)) {
-	case ".png", ".svg", ".jpg", ".jpeg":
-	default:
-		return entry, fmt.Errorf("%s: unsupported logo extension", filename)
+	if strings.ToLower(path.Ext(entry.Logo)) != ".png" {
+		return entry, fmt.Errorf("%s: logo must be a PNG", filename)
 	}
 	for _, key := range []string{"website", "registryUrl"} {
 		u, err := url.Parse(fields[key].(string))
@@ -181,6 +182,33 @@ func ReadIdentities(root fs.FS) ([]Entry, error) {
 	return entries, err
 }
 
+func validatePNG(root fs.FS, filename string) error {
+	f, err := root.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	data, err := io.ReadAll(io.LimitReader(f, maxLogoBytes+1))
+	if err != nil {
+		return err
+	}
+	if len(data) > maxLogoBytes {
+		return fmt.Errorf("logo exceeds 2 MB")
+	}
+	config, err := png.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("invalid PNG: %w", err)
+	}
+	if config.Width != config.Height || config.Width < 128 || config.Width > 1024 {
+		return fmt.Errorf("PNG must be square, from 128x128 to 1024x1024 pixels")
+	}
+	// Check dimensions before allocating pixels, then verify the complete image.
+	if _, err := png.Decode(bytes.NewReader(data)); err != nil {
+		return fmt.Errorf("invalid PNG: %w", err)
+	}
+	return nil
+}
+
 // ValidateRepository checks all info.json files and referenced logos. Legacy logo-only folders are allowed.
 func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 	var entries []Entry
@@ -234,6 +262,9 @@ func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 		}
 		if logo.Size() > maxLogoBytes {
 			return fmt.Errorf("%s: logo exceeds 2 MB", filename)
+		}
+		if err := validatePNG(root, path.Join(path.Dir(filename), entry.Logo)); err != nil {
+			return fmt.Errorf("%s: logo: %w", filename, err)
 		}
 		entries = append(entries, entry)
 		return nil

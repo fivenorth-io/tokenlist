@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"image"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,7 +27,11 @@ func TestRunValidatesCurrentButOnlyReadsBaseIdentities(t *testing.T) {
 	}
 	write(base, "info.json", old)
 	write(current, "info.json", valid)
-	write(current, "logo.png", "logo")
+	var logo bytes.Buffer
+	if err := png.Encode(&logo, image.NewNRGBA(image.Rect(0, 0, 256, 256))); err != nil {
+		t.Fatal(err)
+	}
+	write(current, "logo.png", logo.String())
 	if err := run(current, base); err != nil {
 		t.Fatal(err)
 	}
