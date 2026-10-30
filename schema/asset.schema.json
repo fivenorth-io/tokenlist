@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Loop asset metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "network", "assetKey", "adminParty", "instrumentId", "issuerName", "name", "symbol", "decimals", "logo", "website", "registryUrl", "wallet", "data", "pricing"],
+  "properties": {
+    "schemaVersion": {"const": 1, "description": "Use integer notation."},
+    "network": {"enum": ["mainnet", "devnet", "testnet"]},
+    "assetKey": {"allOf": [{"$ref": "#/definitions/text"}, {"pattern": "^[^/,?#\\\\]+$"}]},
+    "adminParty": {"type": "string", "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
+    "instrumentId": {"$ref": "#/definitions/text"},
+    "issuerName": {"$ref": "#/definitions/text"},
+    "name": {"$ref": "#/definitions/text"},
+    "symbol": {"$ref": "#/definitions/text"},
+    "decimals": {"type": "integer", "minimum": 0, "maximum": 10, "description": "Use integer notation."},
+    "logo": {"type": "string", "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
+    "website": {"$ref": "#/definitions/https"},
+    "registryUrl": {"$ref": "#/definitions/https"},
+    "wallet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "visibleByDefault"],
+      "properties": {"enabled": {"type": "boolean"}, "visibleByDefault": {"type": "boolean"}},
+      "if": {"properties": {"enabled": {"const": false}}},
+      "then": {"properties": {"visibleByDefault": {"const": false}}}
+    },
+    "data": {
+      "type": "object", "additionalProperties": false, "required": ["listed"],
+      "properties": {"listed": {"type": "boolean"}}
+    },
+    "pricing": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "sources"],
+          "properties": {
+            "type": {"enum": ["direct", "reference"]},
+            "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/source"}}
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "currency", "value"],
+          "properties": {"type": {"const": "fixed"}, "currency": {"const": "USD"}, "value": {"$ref": "#/definitions/positiveDecimal"}}
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type"],
+          "properties": {"type": {"const": "none"}}
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "text": {"type": "string", "minLength": 1, "pattern": "^\\S(?:[\\s\\S]*\\S)?$", "not": {"pattern": "\u0000"}},
+    "https": {"type": "string", "format": "uri", "pattern": "^https://[^/?#@]+(?:[/?][^#]*)?$"},
+    "positiveDecimal": {"type": "string", "pattern": "^(0\\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(\\.[0-9]+)?)$"},
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["provider", "providerAssetId"],
+      "properties": {
+        "provider": {"$ref": "#/definitions/text"},
+        "providerAssetId": {"$ref": "#/definitions/text"},
+        "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"}
+      }
+    }
+  }
+}
