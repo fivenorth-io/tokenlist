@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "CUSD",
+  "adminParty": "party-28dc4516-b5ca-44ff-86c7-2107e90a6807::1220b8301e18aa8a401d6e34e6c20f8b0243183c514373bca8f1b6b9270246341a9e",
+  "instrumentId": "481871d4-ca56-42a8-b2d3-4b7d28742946",
+  "issuerName": "Brale",
+  "name": "CUSD",
+  "symbol": "CUSD",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://brale.xyz",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/party-28dc4516-b5ca-44ff-86c7-2107e90a6807::1220b8301e18aa8a401d6e34e6c20f8b0243183c514373bca8f1b6b9270246341a9e/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": true
+  },
+  "pricing": {
+    "type": "fixed",
+    "currency": "USD",
+    "value": "1"
+  }
+}

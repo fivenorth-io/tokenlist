@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "RIZE",
+  "adminParty": "CarbonZero-Registrar::1220da76be269fa8abb3ed9a36dfb9ffbe6491872700f8ae4d5986660bedc0c96c2d",
+  "instrumentId": "RIZE",
+  "issuerName": "T-RIZE",
+  "name": "RIZE",
+  "symbol": "RIZE",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.t-rize.io",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/CarbonZero-Registrar::1220da76be269fa8abb3ed9a36dfb9ffbe6491872700f8ae4d5986660bedc0c96c2d/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "direct",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "36539",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "rize",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

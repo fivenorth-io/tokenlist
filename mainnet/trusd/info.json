@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "trUSD",
+  "adminParty": "tori-issuer::12209ca44a2e3b2fbe3b5696775231c97e856865b24c54741800a6801e2569290fe4",
+  "instrumentId": "trUSD",
+  "issuerName": "Tori Finance",
+  "name": "trUSD",
+  "symbol": "trUSD",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://tori.finance",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/tori-issuer::12209ca44a2e3b2fbe3b5696775231c97e856865b24c54741800a6801e2569290fe4/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "direct",
+    "sources": [
+      {
+        "provider": "coingecko",
+        "providerAssetId": "tori-trusd",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

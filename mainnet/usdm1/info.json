@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "USDM1",
+  "adminParty": "M1-validator-1::12207b40944692e083593819697e1cd87a94026afca2564253d16ff8696b233a6637",
+  "instrumentId": "USDM1",
+  "issuerName": "M1X Global",
+  "name": "USDM1",
+  "symbol": "USDM1",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://usdm1.com/",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/M1-validator-1::12207b40944692e083593819697e1cd87a94026afca2564253d16ff8696b233a6637/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "direct",
+    "sources": [
+      {
+        "provider": "coingecko",
+        "providerAssetId": "usdm1",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

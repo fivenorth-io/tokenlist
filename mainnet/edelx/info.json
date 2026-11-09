@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "EDELx",
+  "adminParty": "edel-registrar::122085b19d439b7e68abf7c94c3d9949f9e23aef3f1d4835ccbcb0993ed96fb53432",
+  "instrumentId": "EDELx",
+  "issuerName": "Edel",
+  "name": "EDELx",
+  "symbol": "EDELx",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://docs.edel.finance/token/overview",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/edel-registrar::122085b19d439b7e68abf7c94c3d9949f9e23aef3f1d4835ccbcb0993ed96fb53432/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

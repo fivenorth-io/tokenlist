@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "aUSDCx",
+  "adminParty": "acme-lp::1220a7daf7140e112f15a46f2daa52fe9c8651024ff8705bb23c494275dd02209596",
+  "instrumentId": "aUSDCx",
+  "issuerName": "ACME",
+  "name": "aUSDCx",
+  "symbol": "aUSDCx",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://acmemarkets.cc/",
+  "registryUrl": "https://registry.canton.hellomoon.io/api/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "fixed",
+    "currency": "USD",
+    "value": "1"
+  }
+}

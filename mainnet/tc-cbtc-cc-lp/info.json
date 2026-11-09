@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "TC CBTC-CC LP",
+  "adminParty": "cs-vault::1220b4cd6098eebafd4c88efd2b3986e86542bdc391060675432cd195ad26bcf013b",
+  "instrumentId": "TC CBTC/CC LP",
+  "issuerName": "Tradecraft",
+  "name": "TC CBTC/CC LP",
+  "symbol": "TC CBTC/CC LP",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://tradecraft.fi/",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/cs-vault::1220b4cd6098eebafd4c88efd2b3986e86542bdc391060675432cd195ad26bcf013b/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": false
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}
