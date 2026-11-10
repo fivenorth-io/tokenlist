@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "testnet",
+  "assetKey": "BETH",
+  "adminParty": "beth-network::122027d91679105c721435c6f08f8d0cd684e6679f385731f5b3691cb9bf93cd126e",
+  "instrumentId": "BETH",
+  "issuerName": "BitSafe",
+  "name": "BETH",
+  "symbol": "BETH",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://bitsafe.finance",
+  "registryUrl": "https://api.utilities.digitalasset-staging.com/api/token-standard/v0/registrars/beth-network::122027d91679105c721435c6f08f8d0cd684e6679f385731f5b3691cb9bf93cd126e/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "1027",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "ethereum",
+        "multiplier": "1"
+      }
+    ]
+  }
+}
