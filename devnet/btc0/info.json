@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "devnet",
+  "assetKey": "BTC0",
+  "adminParty": "rails-btc0-dev::122039badd8775d0736620d4790b1759f3b679899b2fc1eb05b0080fa16644e9e48a",
+  "instrumentId": "BTC0",
+  "issuerName": "onRails",
+  "name": "BTC0",
+  "symbol": "BTC0",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://btc0.network/integration/token-identity",
+  "registryUrl": "https://api.utilities.digitalasset-dev.com/api/token-standard/v0/registrars/rails-btc0-dev::122039badd8775d0736620d4790b1759f3b679899b2fc1eb05b0080fa16644e9e48a/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "1",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "bitcoin",
+        "multiplier": "1"
+      }
+    ]
+  }
+}
