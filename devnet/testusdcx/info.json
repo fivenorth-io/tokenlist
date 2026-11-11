@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "devnet",
+  "assetKey": "testUSDCx",
+  "adminParty": "DA-Dev-9fb65c62::1220c511fe276fd9bd62d176a6583f44599cc1a046b214a7a5cd9b621e03cddf5b39",
+  "instrumentId": "testUSDCx",
+  "issuerName": "Digital Asset",
+  "name": "testUSDCx",
+  "symbol": "testUSDCx",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://docs.digitalasset.com/",
+  "registryUrl": "https://api.utilities.digitalasset-dev.com/api/token-standard/v0/registrars/DA-Dev-9fb65c62::1220c511fe276fd9bd62d176a6583f44599cc1a046b214a7a5cd9b621e03cddf5b39/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

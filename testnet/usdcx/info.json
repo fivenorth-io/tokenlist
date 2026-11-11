@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "network": "testnet",
+  "assetKey": "USDCx",
+  "adminParty": "decentralized-usdc-interchain-rep::122049e2af8a725bd19759320fc83c638e7718973eac189d8f201309c512d1ffec61",
+  "instrumentId": "USDCx",
+  "issuerName": "USDCx",
+  "name": "USDCx",
+  "symbol": "USDCx",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://www.circle.com/blog/usdcx-on-canton-now-available-via-circle-xreserve",
+  "registryUrl": "https://api.utilities.digitalasset-staging.com/api/token-standard/v0/registrars/decentralized-usdc-interchain-rep::122049e2af8a725bd19759320fc83c638e7718973eac189d8f201309c512d1ffec61/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": true
+  },
+  "pricing": {
+    "type": "fixed",
+    "currency": "USD",
+    "value": "1"
+  }
+}
