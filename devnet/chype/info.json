@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "devnet",
+  "assetKey": "CHYPE",
+  "adminParty": "chype-network::1220806e3c909f4a07c1131f42163fbceb3fbd1bbcbb90e8fe5a266d629ed49d2c52",
+  "instrumentId": "CHYPE",
+  "issuerName": "BitSafe",
+  "name": "CHYPE",
+  "symbol": "CHYPE",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://bitsafe.finance",
+  "registryUrl": "https://api.utilities.digitalasset-dev.com/api/token-standard/v0/registrars/chype-network::1220806e3c909f4a07c1131f42163fbceb3fbd1bbcbb90e8fe5a266d629ed49d2c52/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "32196",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "hyperliquid",
+        "multiplier": "1"
+      }
+    ]
+  }
+}
