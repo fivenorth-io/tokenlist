@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "cBNB",
+  "adminParty": "cbnb-admin::122065645666a14e30513626b92fd348b76fe0430557d08f68ac3e2beb37b407b3c9",
+  "instrumentId": "cBNB",
+  "issuerName": "Nuxaris",
+  "name": "cBNB",
+  "symbol": "cBNB",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.nuxaris.com/docs",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/cbnb-admin::122065645666a14e30513626b92fd348b76fe0430557d08f68ac3e2beb37b407b3c9/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "1839",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "binancecoin",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

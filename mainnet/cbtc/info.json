@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "CBTC",
+  "adminParty": "cbtc-network::12205af3b949a04776fc48cdcc05a060f6bda2e470632935f375d1049a8546a3b262",
+  "instrumentId": "CBTC",
+  "issuerName": "BitSafe",
+  "name": "CBTC",
+  "symbol": "CBTC",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://bitsafe.finance",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/cbtc-network::12205af3b949a04776fc48cdcc05a060f6bda2e470632935f375d1049a8546a3b262/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": true
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "1",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "bitcoin",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

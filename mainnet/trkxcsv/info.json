@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "TRKXCSV",
+  "adminParty": "trakx-issuer::1220f2acce9d7491505ee5fabb548e9975bbf0f8efaae98404d7399922fb48a03aeb",
+  "instrumentId": "TRKXCSV",
+  "issuerName": "Trakx",
+  "name": "TRKXCSV",
+  "symbol": "TRKXCSV",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://trakx.io",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/trakx-issuer::1220f2acce9d7491505ee5fabb548e9975bbf0f8efaae98404d7399922fb48a03aeb/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": false
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

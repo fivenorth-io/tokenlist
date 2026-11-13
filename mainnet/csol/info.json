@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "cSOL",
+  "adminParty": "rails-csol::1220422e7e9e1ec4a30bd850c92ff5fd1fcac1eddb694aa202ce9b75c5e4f31a0058",
+  "instrumentId": "cSOL",
+  "issuerName": "onRails",
+  "name": "cSOL",
+  "symbol": "cSOL",
+  "decimals": 10,
+  "logo": "icon.png",
+  "website": "https://www.csol.network",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/rails-csol::1220422e7e9e1ec4a30bd850c92ff5fd1fcac1eddb694aa202ce9b75c5e4f31a0058/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "5426",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "solana",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

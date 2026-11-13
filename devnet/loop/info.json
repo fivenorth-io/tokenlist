@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "devnet",
+  "assetKey": "LOOP",
+  "adminParty": "fivenorth-devnet-1::12208c929c3f012c663323ed675b2eaea7d7c6e1a9be35d6b20bc39f311c6aa7cc54",
+  "instrumentId": "LOOP",
+  "issuerName": "Loop",
+  "name": "LOOP",
+  "symbol": "LOOP",
+  "decimals": 10,
+  "logo": "assets/loop.png",
+  "website": "https://wallet.looptech.io/",
+  "registryUrl": "https://api.utilities.digitalasset-dev.com/api/token-standard/v0/registrars/fivenorth-devnet-1::12208c929c3f012c663323ed675b2eaea7d7c6e1a9be35d6b20bc39f311c6aa7cc54/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

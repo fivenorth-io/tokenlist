@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "aCBTC",
+  "adminParty": "acme-lp::1220a7daf7140e112f15a46f2daa52fe9c8651024ff8705bb23c494275dd02209596",
+  "instrumentId": "aCBTC",
+  "issuerName": "ACME",
+  "name": "aCBTC",
+  "symbol": "aCBTC",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://acmemarkets.cc/",
+  "registryUrl": "https://registry.canton.hellomoon.io/api/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "1",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "bitcoin",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "devnet",
+  "assetKey": "SOLx",
+  "adminParty": "memora-dp-devnet::122045e74bfb457641b17d46197dfd282c55fdd0aff5ffcaab9628fab422f6741e79",
+  "instrumentId": "SOLx",
+  "issuerName": "Memora",
+  "name": "SOLx",
+  "symbol": "SOLx",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.memora.systems/",
+  "registryUrl": "https://api.utilities.digitalasset-dev.com/api/token-standard/v0/registrars/memora-dp-devnet::122045e74bfb457641b17d46197dfd282c55fdd0aff5ffcaab9628fab422f6741e79/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "5426",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "solana",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "USTY",
+  "adminParty": "ember-usty::1220ad9c097ae75192b4716854fa413aa8582c86a62b16714663cdab55e025cc79c4",
+  "instrumentId": "USTY",
+  "issuerName": "Ember",
+  "name": "USTY",
+  "symbol": "USTY",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://ember.so/",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/ember-usty::1220ad9c097ae75192b4716854fa413aa8582c86a62b16714663cdab55e025cc79c4/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": false
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}
