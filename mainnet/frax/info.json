@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "FRXUSD.B",
+  "adminParty": "cantonwallet-asset-relayer-instrument-operator::12202e6dd1f885994b22ca64e10582328bcd1a31b4fe69bf529982d31d57c8cab71c",
+  "instrumentId": "FRXUSD.B",
+  "issuerName": "Frax",
+  "name": "FRXUSD.B",
+  "symbol": "FRXUSD.B",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://info.send.it/docs/asset-relayer/integration-guide",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/cantonwallet-asset-relayer-instrument-operator::12202e6dd1f885994b22ca64e10582328bcd1a31b4fe69bf529982d31d57c8cab71c/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

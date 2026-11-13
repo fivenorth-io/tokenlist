@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "CNTN",
+  "adminParty": "onchain-transfer-agent::12204a039322c01e9f714b56259c3e68b69058bf5dfe1debbe956c698f905ceba9d7",
+  "instrumentId": "CNTN",
+  "issuerName": "Canton Strategic Holdings",
+  "name": "CNTN",
+  "symbol": "CNTN",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.cantonstrategic.com",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/onchain-transfer-agent::12204a039322c01e9f714b56259c3e68b69058bf5dfe1debbe956c698f905ceba9d7/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "eXAG",
+  "adminParty": "ember-silver::1220ad9c097ae75192b4716854fa413aa8582c86a62b16714663cdab55e025cc79c4",
+  "instrumentId": "eXAG",
+  "issuerName": "Ember",
+  "name": "eXAG",
+  "symbol": "eXAG",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://ember.so/",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/ember-silver::1220ad9c097ae75192b4716854fa413aa8582c86a62b16714663cdab55e025cc79c4/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "39343",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

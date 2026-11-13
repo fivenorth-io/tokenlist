@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "HANDL",
+  "adminParty": "handl-issuer::12207ac147ad3e95894e7a507da3f04a819e8996f0bdf31c084ab3b77e51746b03cf",
+  "instrumentId": "HANDL",
+  "issuerName": "HandlPay",
+  "name": "HANDL",
+  "symbol": "HANDL",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.handlpay.com/token",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/handl-issuer::12207ac147ad3e95894e7a507da3f04a819e8996f0bdf31c084ab3b77e51746b03cf/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": true
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

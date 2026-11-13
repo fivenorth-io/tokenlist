@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "USDXLR_LEGACY",
+  "adminParty": "4e667aab-9089-400b-9485-74d73732f068::1220dd489bd2242472a14015e9aebc12a48879a7e3aac60875506df30f7fce4e0f78",
+  "instrumentId": "USDXLR_LEGACY",
+  "issuerName": "Excellar",
+  "name": "USDXLR_LEGACY",
+  "symbol": "USDXLR_LEGACY",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://www.excellar.finance",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/4e667aab-9089-400b-9485-74d73732f068::1220dd489bd2242472a14015e9aebc12a48879a7e3aac60875506df30f7fce4e0f78/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": false
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

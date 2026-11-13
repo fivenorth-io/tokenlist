@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "HECTO",
+  "adminParty": "Hecto-Finance-1::12208ee00572aea3304ebb12e34320769ea4b421911c9b658a999e0e64ee8a070972",
+  "instrumentId": "HECTO",
+  "issuerName": "HECTO",
+  "name": "HECTO",
+  "symbol": "HECTO",
+  "decimals": 10,
+  "logo": "assets/logo.png",
+  "website": "https://www.hecto.inc",
+  "registryUrl": "https://api.utilities.digitalasset.com/api/token-standard/v0/registrars/Hecto-Finance-1::12208ee00572aea3304ebb12e34320769ea4b421911c9b658a999e0e64ee8a070972/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": true
+  },
+  "pricing": {
+    "type": "none"
+  }
+}

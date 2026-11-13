@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "network": "mainnet",
+  "assetKey": "aCC",
+  "adminParty": "acme-lp::1220a7daf7140e112f15a46f2daa52fe9c8651024ff8705bb23c494275dd02209596",
+  "instrumentId": "aCC",
+  "issuerName": "ACME",
+  "name": "aCC",
+  "symbol": "aCC",
+  "decimals": 10,
+  "logo": "logo.png",
+  "website": "https://acmemarkets.cc/",
+  "registryUrl": "https://registry.canton.hellomoon.io/api/registry",
+  "wallet": {
+    "enabled": true,
+    "visibleByDefault": true
+  },
+  "data": {
+    "listed": false
+  },
+  "pricing": {
+    "type": "reference",
+    "sources": [
+      {
+        "provider": "coinmarketcap",
+        "providerAssetId": "37263",
+        "multiplier": "1"
+      },
+      {
+        "provider": "coingecko",
+        "providerAssetId": "canton-network",
+        "multiplier": "1"
+      }
+    ]
+  }
+}
