@@ -55,10 +55,13 @@
     "source": {
       "type": "object", "additionalProperties": false, "required": ["provider", "providerAssetId"],
       "properties": {
-        "provider": {"$ref": "#/definitions/text"},
+        "provider": {"enum": ["coinmarketcap", "coingecko"]},
         "providerAssetId": {"$ref": "#/definitions/text"},
         "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"}
-      }
+      },
+      "if": {"properties": {"provider": {"const": "coinmarketcap"}}},
+      "then": {"properties": {"providerAssetId": {"pattern": "^[1-9][0-9]*$", "maxLength": 19}}},
+      "else": {"properties": {"providerAssetId": {"pattern": "^[a-z0-9][a-z0-9._-]*$"}}}
     }
   }
 }

@@ -22,5 +22,6 @@ Shared asset metadata and logos for Loop Wallet and Loop Data.
 - Asset keys are case-sensitive and unique per network. Preserve existing keys, on-chain identities, and decimals; disable assets instead of deleting them.
 - Assets with the same network and admin party must share an issuer name and registry URL.
 - Direct/reference pricing uses ordered sources with a positive decimal-string multiplier (default `"1"`). Fixed USD pricing and unavailable pricing are standalone choices, never fallbacks.
+- Supported providers are `coinmarketcap` and `coingecko`. Use a positive numeric CMC ID (no leading zeros, at most signed 64-bit) or a lowercase CoinGecko API ID, not a URL. CMC sources must come before CoinGecko when both are present; either provider can be used alone.
 
 CI checks metadata, logos, consistency, and changes to existing identities. Reviewers verify issuer and pricing information. Merging does not guarantee immediate availability in every app.
