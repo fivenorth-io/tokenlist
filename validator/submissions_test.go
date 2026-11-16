@@ -1,6 +1,11 @@
 package validator
 
-import "testing"
+import (
+	"encoding/json"
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestProviderSubmissions(t *testing.T) {
 	v := newValidator(t)
@@ -32,5 +37,86 @@ func TestProviderSubmissions(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestSubmissionTextLimits(t *testing.T) {
+	v := newValidator(t)
+	for field, limit := range map[string]int{"assetKey": 64, "name": 128, "symbol": 64, "issuerName": 128, "instrumentId": 128} {
+		for _, extra := range []int{0, 1} {
+			data := metadata(t, func(m map[string]any) { m[field] = strings.Repeat("a", limit+extra) })
+			_, err := v.Validate("testnet/beth/info.json", data)
+			if (err == nil) != (extra == 0) {
+				t.Errorf("%s length %d: %v", field, limit+extra, err)
+			}
+		}
+	}
+	for _, key := range []string{"A,B", "A/B", "A\nB", "A\tB", "A%B", "A&B", "A?B", "A#B", "BÉTH"} {
+		if _, err := v.Validate("testnet/beth/info.json", metadata(t, func(m map[string]any) { m["assetKey"] = key })); err == nil {
+			t.Errorf("accepted unsafe key %q", key)
+		}
+	}
+	for _, key := range []string{"FRXUSD.B", "TC CC-USDCx LP", "cSOL_LEGACY"} {
+		if _, err := v.Validate("testnet/beth/info.json", metadata(t, func(m map[string]any) { m["assetKey"] = key })); err != nil {
+			t.Errorf("rejected supported key %q: %v", key, err)
+		}
+	}
+	for _, field := range []string{"name", "issuerName", "symbol", "instrumentId"} {
+		if _, err := v.Validate("testnet/beth/info.json", metadata(t, func(m map[string]any) { m[field] = "a\nb" })); err == nil {
+			t.Errorf("accepted control character in %s", field)
+		}
+	}
+}
+
+func TestReservedKeys(t *testing.T) {
+	v := newValidator(t)
+	for _, key := range reservedKeys {
+		for _, casing := range []string{key, strings.ToUpper(key)} {
+			if _, err := v.Validate("testnet/beth/info.json", metadata(t, func(m map[string]any) { m["assetKey"] = casing })); err == nil {
+				t.Errorf("accepted reserved key %s", casing)
+			}
+		}
+	}
+	var existing []reservedAsset
+	if err := json.Unmarshal(reservedAssetsJSON, &existing); err != nil {
+		t.Fatal(err)
+	}
+	if len(existing) == 0 {
+		t.Fatal("missing compatibility entries")
+	}
+	for _, asset := range existing {
+		entry := Entry{Network: asset.Network, AssetKey: asset.AssetKey, AdminParty: asset.AdminParty, InstrumentID: asset.InstrumentID}
+		if err := validateReservedKey(entry); err != nil {
+			t.Fatal(err)
+		}
+		for _, field := range []string{"network", "admin", "instrument", "case"} {
+			changed := entry
+			switch field {
+			case "network":
+				changed.Network = "unknown"
+			case "admin":
+				changed.AdminParty = "other::1220" + strings.Repeat("b", 64)
+			case "instrument":
+				changed.InstrumentID = "other"
+			case "case":
+				changed.AssetKey = strings.ToUpper(entry.AssetKey)
+				if changed.AssetKey == entry.AssetKey {
+					changed.AssetKey = strings.ToLower(entry.AssetKey)
+				}
+			}
+			if err := validateReservedKey(changed); err == nil {
+				t.Errorf("allowed %s takeover of %s", field, entry.AssetKey)
+			}
+		}
+	}
+}
+
+func TestExistingAssetsMeetSubmissionRules(t *testing.T) {
+	entries, err := newValidator(t).ValidateRepository(os.DirFS(".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("no existing assets validated")
 	}
 }
