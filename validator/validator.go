@@ -61,6 +61,11 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	var integers struct {
 		SchemaVersion int    `json:"schemaVersion"`
 		Decimals      *int64 `json:"decimals"`
+		Pricing       struct {
+			Sources []struct {
+				MaxAge *int64 `json:"maxAge"`
+			} `json:"sources"`
+		} `json:"pricing"`
 	}
 	if err := json.Unmarshal(data, &integers); err != nil {
 		return entry, fmt.Errorf("%s: %w", filename, err)
@@ -93,13 +98,14 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	return entry, nil
 }
 
-// ValidateSet checks uniqueness and issuer consistency within each network.
+// ValidateSet checks uniqueness and issuer consistency within each network. Asset keys must stay
+// unique after lowercasing, because consumers look assets up by the lowercased key.
 func ValidateSet(entries []Entry) error {
 	keys, identities, paths := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	issuers, urls := map[string]string{}, map[string]string{}
 	for _, e := range entries {
 		admin := e.Network + "\x00" + e.AdminParty
-		key, identity := e.Network+"\x00"+e.AssetKey, admin+"\x00"+e.InstrumentID
+		key, identity := e.Network+"\x00"+strings.ToLower(e.AssetKey), admin+"\x00"+e.InstrumentID
 		if keys[key] || identities[identity] || paths[e.Path] {
 			return fmt.Errorf("%s: duplicate asset key, identity, or path", e.Path)
 		}
