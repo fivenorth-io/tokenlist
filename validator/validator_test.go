@@ -276,6 +276,7 @@ func TestPricingSourceKindAndMaxAge(t *testing.T) {
 		"issuer reference": {"kind": "issuer_reference"},
 		"maxAge zero":      {"maxAge": 0},
 		"kind and maxAge":  {"kind": "market", "maxAge": 900},
+		"maxAge at cap":    {"maxAge": 604800},
 	} {
 		t.Run("valid/"+name, func(t *testing.T) {
 			if _, err := v.Validate("testnet/beth/info.json", withSource(t, fields)); err != nil {
@@ -292,6 +293,8 @@ func TestPricingSourceKindAndMaxAge(t *testing.T) {
 		"fractional maxAge": {"maxAge": 1.5},
 		"string maxAge":     {"maxAge": "900"},
 		"null maxAge":       {"maxAge": nil},
+		"maxAge over cap":   {"maxAge": 604801},
+		"maxAge overflow":   {"maxAge": 9223372037},
 	} {
 		t.Run("invalid/"+name, func(t *testing.T) {
 			if _, err := v.Validate("testnet/beth/info.json", withSource(t, fields)); err == nil {
