@@ -38,3 +38,14 @@ jobs:
         if: github.event_name != 'pull_request'
         working-directory: tokenlist
         run: go run ./cmd/validate-assets -root .
+      # Loop Wallet pins tokenlist in wallet-backend's go.mod, Loop Data in Lighthouse's app/go.mod.
+      # Both steps below must use the older of the two pins. Bump them together, and only once
+      # both apps run the newer version on every network.
+      - name: Validate PR metadata with the version Loop Wallet and Loop Data run
+        if: github.event_name == 'pull_request'
+        working-directory: tokenlist
+        run: go run github.com/fivenorth-io/tokenlist/cmd/validate-assets@v0.1.0 -root . -base ../tokenlist-base
+      - name: Validate merged metadata with the version Loop Wallet and Loop Data run
+        if: github.event_name != 'pull_request'
+        working-directory: tokenlist
+        run: go run github.com/fivenorth-io/tokenlist/cmd/validate-assets@v0.1.0 -root .
