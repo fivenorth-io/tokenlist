@@ -53,7 +53,7 @@ func TestMetadata(t *testing.T) {
 						p["currency"], p["value"] = "USD", "1"
 					}
 					if kind == "direct" || kind == "reference" {
-						p["sources"] = []any{map[string]any{"provider": "coinmarketcap", "providerAssetId": "5426"}, map[string]any{"provider": "pyth", "providerAssetId": "feed", "multiplier": "0.01"}}
+						p["sources"] = []any{map[string]any{"provider": "coinmarketcap", "providerAssetId": "5426"}, map[string]any{"provider": "coingecko", "providerAssetId": "solana", "multiplier": "0.01"}}
 					}
 				})
 				if _, err := v.Validate(network+"/beth/info.json", data); err != nil {
