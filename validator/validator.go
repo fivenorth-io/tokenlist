@@ -68,6 +68,12 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	fields := value.(map[string]any)
 	entry = Entry{Path: filename, Network: fields["network"].(string), AssetKey: fields["assetKey"].(string), AdminParty: fields["adminParty"].(string), InstrumentID: fields["instrumentId"].(string), IssuerName: fields["issuerName"].(string), RegistryURL: fields["registryUrl"].(string), Logo: fields["logo"].(string)}
 	entry.Decimals = *integers.Decimals
+	if err := validateReservedKey(entry); err != nil {
+		return entry, err
+	}
+	if err := validateProviderOrder(fields); err != nil {
+		return entry, fmt.Errorf("%s: %w", filename, err)
+	}
 	parts := strings.Split(filename, "/")
 	if !safePath(filename) || len(parts) != 3 || parts[0] != entry.Network || parts[2] != "info.json" {
 		return entry, fmt.Errorf("%s: expected <network>/<asset>/info.json matching network", filename)

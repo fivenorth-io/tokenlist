@@ -7,14 +7,14 @@
   "properties": {
     "schemaVersion": {"const": 1, "description": "Use integer notation."},
     "network": {"enum": ["mainnet", "devnet", "testnet"]},
-    "assetKey": {"allOf": [{"$ref": "#/definitions/text"}, {"pattern": "^[^/,?#\\\\]+$"}]},
-    "adminParty": {"type": "string", "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
+    "assetKey": {"allOf": [{"$ref": "#/definitions/text"}], "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9._ -]*$"},
+    "adminParty": {"type": "string", "maxLength": 255, "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
     "instrumentId": {"$ref": "#/definitions/text"},
     "issuerName": {"$ref": "#/definitions/text"},
     "name": {"$ref": "#/definitions/text"},
-    "symbol": {"$ref": "#/definitions/text"},
+    "symbol": {"allOf": [{"$ref": "#/definitions/text"}], "maxLength": 64},
     "decimals": {"type": "integer", "minimum": 0, "maximum": 10, "description": "Use integer notation."},
-    "logo": {"type": "string", "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
+    "logo": {"type": "string", "maxLength": 256, "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
     "website": {"$ref": "#/definitions/https"},
     "registryUrl": {"$ref": "#/definitions/https"},
     "wallet": {
@@ -49,16 +49,19 @@
     }
   },
   "definitions": {
-    "text": {"type": "string", "minLength": 1, "pattern": "^\\S(?:[\\s\\S]*\\S)?$", "not": {"pattern": "\u0000"}},
-    "https": {"type": "string", "format": "uri", "pattern": "^https://[^/?#@]+(?:[/?][^#]*)?$"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^\\S(?:[\\s\\S]*\\S)?$", "not": {"pattern": "[\u0000-\u001f\u007f]"}},
+    "https": {"type": "string", "format": "uri", "maxLength": 2048, "pattern": "^https://[^/?#@]+(?:[/?][^#]*)?$"},
     "positiveDecimal": {"type": "string", "pattern": "^(0\\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(\\.[0-9]+)?)$"},
     "source": {
       "type": "object", "additionalProperties": false, "required": ["provider", "providerAssetId"],
       "properties": {
-        "provider": {"$ref": "#/definitions/text"},
+        "provider": {"enum": ["coinmarketcap", "coingecko"]},
         "providerAssetId": {"$ref": "#/definitions/text"},
         "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"}
-      }
+      },
+      "if": {"properties": {"provider": {"const": "coinmarketcap"}}},
+      "then": {"properties": {"providerAssetId": {"pattern": "^[1-9][0-9]*$", "maxLength": 19}}},
+      "else": {"properties": {"providerAssetId": {"pattern": "^[a-z0-9][a-z0-9._-]*$"}}}
     }
   }
 }
