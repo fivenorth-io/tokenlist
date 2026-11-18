@@ -18,6 +18,9 @@ func TestProviderSubmissions(t *testing.T) {
 		{"gecko only", []map[string]any{{"provider": "coingecko", "providerAssetId": "tori-staked-trusd"}}, true},
 		{"ordered", []map[string]any{{"provider": "coinmarketcap", "providerAssetId": "1"}, {"provider": "coingecko", "providerAssetId": "bitcoin"}}, true},
 		{"reversed", []map[string]any{{"provider": "coingecko", "providerAssetId": "bitcoin"}, {"provider": "coinmarketcap", "providerAssetId": "1"}}, false},
+		{"repeated cmc", []map[string]any{{"provider": "coinmarketcap", "providerAssetId": "1"}, {"provider": "coinmarketcap", "providerAssetId": "1027"}}, false},
+		{"repeated gecko", []map[string]any{{"provider": "coingecko", "providerAssetId": "bitcoin"}, {"provider": "coingecko", "providerAssetId": "ethereum"}}, false},
+		{"identical source", []map[string]any{{"provider": "coinmarketcap", "providerAssetId": "1"}, {"provider": "coinmarketcap", "providerAssetId": "1"}}, false},
 		{"unsupported", []map[string]any{{"provider": "pyth", "providerAssetId": "feed"}}, false},
 		{"cmc text", []map[string]any{{"provider": "coinmarketcap", "providerAssetId": "bitcoin"}}, false},
 		{"cmc zero", []map[string]any{{"provider": "coinmarketcap", "providerAssetId": "0"}}, false},
@@ -118,5 +121,19 @@ func TestExistingAssetsMeetSubmissionRules(t *testing.T) {
 	}
 	if len(entries) == 0 {
 		t.Fatal("no existing assets validated")
+	}
+}
+
+func TestAdminPartyLength(t *testing.T) {
+	v := newValidator(t)
+	for _, length := range []int{255, 256} {
+		data := metadata(t, func(m map[string]any) {
+			suffix := "::1220" + strings.Repeat("a", 64)
+			m["adminParty"] = strings.Repeat("a", length-len(suffix)) + suffix
+		})
+		_, err := v.Validate("testnet/beth/info.json", data)
+		if (err == nil) != (length == 255) {
+			t.Errorf("adminParty length %d: %v", length, err)
+		}
 	}
 }

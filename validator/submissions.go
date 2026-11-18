@@ -52,9 +52,15 @@ func validateProviderOrder(fields map[string]any) error {
 	pricing := fields["pricing"].(map[string]any)
 	sources, _ := pricing["sources"].([]any)
 	seenCoinGecko := false
+	seenProviders := make(map[string]bool)
 	for _, raw := range sources {
 		source := raw.(map[string]any)
-		if source["provider"] == "coingecko" {
+		provider := source["provider"].(string)
+		if seenProviders[provider] {
+			return fmt.Errorf("provider %q can appear only once in a source list", provider)
+		}
+		seenProviders[provider] = true
+		if provider == "coingecko" {
 			seenCoinGecko = true
 			continue
 		}

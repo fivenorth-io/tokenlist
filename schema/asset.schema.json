@@ -8,7 +8,7 @@
     "schemaVersion": {"const": 1, "description": "Use integer notation."},
     "network": {"enum": ["mainnet", "devnet", "testnet"]},
     "assetKey": {"allOf": [{"$ref": "#/definitions/text"}], "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9._ -]*$"},
-    "adminParty": {"type": "string", "maxLength": 512, "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
+    "adminParty": {"type": "string", "maxLength": 255, "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
     "instrumentId": {"$ref": "#/definitions/text"},
     "issuerName": {"$ref": "#/definitions/text"},
     "name": {"$ref": "#/definitions/text"},
