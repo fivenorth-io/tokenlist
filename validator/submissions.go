@@ -60,6 +60,10 @@ func validateProviderOrder(fields map[string]any) error {
 			return fmt.Errorf("provider %q can appear only once in a source list", provider)
 		}
 		seenProviders[provider] = true
+		// Issuer prices are never market prices, so the CMC and CoinGecko order doesn't apply to them.
+		if provider == "issuer" {
+			continue
+		}
 		if provider == "coingecko" {
 			seenCoinGecko = true
 			continue

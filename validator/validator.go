@@ -26,6 +26,8 @@ type Entry struct {
 	RegistryURL  string
 	Logo         string
 	Decimals     int64
+	IssuerKeys   []IssuerKey
+	IssuerFeedID string
 }
 
 type Validator struct{ schema *jsonschema.Schema }
@@ -73,6 +75,7 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	fields := value.(map[string]any)
 	entry = Entry{Path: filename, Network: fields["network"].(string), AssetKey: fields["assetKey"].(string), AdminParty: fields["adminParty"].(string), InstrumentID: fields["instrumentId"].(string), IssuerName: fields["issuerName"].(string), RegistryURL: fields["registryUrl"].(string), Logo: fields["logo"].(string)}
 	entry.Decimals = *integers.Decimals
+	entry.IssuerKeys, entry.IssuerFeedID = issuerKeys(fields), issuerFeedID(fields)
 	if err := validateReservedKey(entry); err != nil {
 		return entry, err
 	}
@@ -95,14 +98,19 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 			return entry, fmt.Errorf("%s: invalid %s", filename, key)
 		}
 	}
+	if err := validateIssuerSigning(entry, fields); err != nil {
+		return entry, fmt.Errorf("%s: %w", filename, err)
+	}
 	return entry, nil
 }
 
 // ValidateSet checks uniqueness and issuer consistency within each network. Asset keys must stay
-// unique after lowercasing, because consumers look assets up by the lowercased key.
+// unique after lowercasing, because consumers look assets up by the lowercased key. An issuer key
+// can't be on entries in two networks, and an issuer feed ID, ignoring case, is on one entry only.
 func ValidateSet(entries []Entry) error {
 	keys, identities, paths := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	issuers, urls := map[string]string{}, map[string]string{}
+	keyNetworks, feeds := map[string]string{}, map[string]bool{}
 	for _, e := range entries {
 		admin := e.Network + "\x00" + e.AdminParty
 		key, identity := e.Network+"\x00"+strings.ToLower(e.AssetKey), admin+"\x00"+e.InstrumentID
@@ -117,6 +125,18 @@ func ValidateSet(entries []Entry) error {
 			return fmt.Errorf("%s: inconsistent registryUrl for admin", e.Path)
 		}
 		issuers[admin], urls[admin] = e.IssuerName, e.RegistryURL
+		for _, k := range e.IssuerKeys {
+			if network, ok := keyNetworks[k.PublicKey]; ok && network != e.Network {
+				return fmt.Errorf("%s: issuer key is already used in %s; use a separate key per network", e.Path, network)
+			}
+			keyNetworks[k.PublicKey] = e.Network
+		}
+		if feed := strings.ToLower(e.IssuerFeedID); feed != "" {
+			if feeds[feed] {
+				return fmt.Errorf("%s: duplicate issuer feed ID %q", e.Path, e.IssuerFeedID)
+			}
+			feeds[feed] = true
+		}
 	}
 	return nil
 }
