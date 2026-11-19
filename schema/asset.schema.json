@@ -57,7 +57,9 @@
       "properties": {
         "provider": {"enum": ["coinmarketcap", "coingecko"]},
         "providerAssetId": {"$ref": "#/definitions/text"},
-        "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"}
+        "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"},
+        "kind": {"enum": ["market", "nav", "issuer_reference"], "default": "market", "description": "What the quote measures: a traded market price, an issuer-reported NAV, or an issuer-reported reference price. Sources of different kinds are separate series and never stand in for each other."},
+        "maxAge": {"type": "integer", "minimum": 0, "maximum": 604800, "description": "Seconds a quote may age before the consumer asks the next source of the same kind, at most 604800 (7 days). 0 accepts any age. Without it, the consumer uses its own default. Use integer notation."}
       },
       "if": {"properties": {"provider": {"const": "coinmarketcap"}}},
       "then": {"properties": {"providerAssetId": {"pattern": "^[1-9][0-9]*$", "maxLength": 19}}},
