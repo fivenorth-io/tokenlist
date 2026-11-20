@@ -24,15 +24,17 @@ type reservedAsset struct {
 	InstrumentID string `json:"instrumentId"`
 }
 
-func validateReservedKey(entry Entry) error {
-	reserved := false
-	for _, key := range reservedKeys {
-		if strings.ToLower(entry.AssetKey) == key {
-			reserved = true
-			break
+func IsReservedKey(key string) bool {
+	for _, reserved := range reservedKeys {
+		if strings.ToLower(key) == reserved {
+			return true
 		}
 	}
-	if !reserved {
+	return false
+}
+
+func validateReservedKey(entry Entry) error {
+	if !IsReservedKey(entry.AssetKey) {
 		return nil
 	}
 	var existing []reservedAsset
