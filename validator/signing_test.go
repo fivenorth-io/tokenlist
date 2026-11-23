@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -172,5 +173,126 @@ func TestIssuerKeysAndFeedsAcrossEntries(t *testing.T) {
 	root["mainnet/beth/info.json"] = &fstest.MapFile{Data: card("mainnet", "BETH", keyG, "")}
 	if _, err := v.ValidateRepository(root); err == nil {
 		t.Fatal("accepted one key in two networks across the repository")
+	}
+}
+
+func TestIssuerKeysPerAdminParty(t *testing.T) {
+	v := newValidator(t)
+	issuer, other := "issuer::1220"+strings.Repeat("a", 64), "other::1220"+strings.Repeat("b", 64)
+	type card struct {
+		network, admin string
+		keys           []any
+	}
+	data := func(c card, asset string) []byte {
+		return metadata(t, func(m map[string]any) {
+			m["network"], m["adminParty"], m["assetKey"], m["instrumentId"], m["issuerKeys"] = c.network, c.admin, asset, asset, c.keys
+			if c.admin == other {
+				m["issuerName"], m["registryUrl"] = "Other", "https://other.example.com/registry"
+			}
+		})
+	}
+	entries := func(cards []card) []Entry {
+		t.Helper()
+		var list []Entry
+		for i, c := range cards {
+			asset := string(rune('A' + i))
+			e, err := v.Validate(c.network+"/"+strings.ToLower(asset)+"/info.json", data(c, asset))
+			if err != nil {
+				t.Fatal(err)
+			}
+			list = append(list, e)
+		}
+		return list
+	}
+	for _, tc := range []struct {
+		name  string
+		cards []card
+		err   string // a part of the error, or "" when the entries are valid
+	}{
+		{"one key and kid on three entries", []card{
+			{"testnet", issuer, []any{issuerKey("2026-11", keyG)}},
+			{"testnet", issuer, []any{issuerKey("2026-11", keyG)}},
+			{"testnet", issuer, []any{issuerKey("2026-11", keyG)}},
+		}, ""},
+		{"rotation", []card{
+			{"testnet", issuer, []any{issuerKey("2026-05", keyG), issuerKey("2026-11", keyCDS1)}},
+			{"testnet", issuer, []any{issuerKey("2026-05", keyG)}},
+			{"testnet", issuer, []any{issuerKey("2026-11", keyCDS1)}},
+		}, ""},
+		{"two keys in either order", []card{
+			{"testnet", issuer, []any{issuerKey("2026-05", keyG), issuerKey("2026-11", keyCDS1)}},
+			{"testnet", issuer, []any{issuerKey("2026-11", keyCDS1), issuerKey("2026-05", keyG)}},
+		}, ""},
+		{"one kid in two admin parties", []card{
+			{"testnet", issuer, []any{issuerKey("2026-11", keyG)}},
+			{"testnet", other, []any{issuerKey("2026-11", keyCDS1)}},
+		}, ""},
+		{"one kid in two networks", []card{
+			{"testnet", issuer, []any{issuerKey("2026-11", keyG)}},
+			{"mainnet", issuer, []any{issuerKey("2026-11", keyCDS1)}},
+		}, ""},
+		{"kid names two keys", []card{
+			{"testnet", issuer, []any{issuerKey("k", keyG)}},
+			{"testnet", issuer, []any{issuerKey("k", keyCDS1)}},
+		}, "already names another key"},
+		{"kids that differ only in case name two keys", []card{
+			{"testnet", issuer, []any{issuerKey("k", keyG)}},
+			{"testnet", issuer, []any{issuerKey("K", keyCDS1)}},
+		}, "already names another key"},
+		{"second kid names another key", []card{
+			{"testnet", issuer, []any{issuerKey("a", keyG), issuerKey("b", keyCDS1)}},
+			{"testnet", issuer, []any{issuerKey("b", keyCDS2)}},
+		}, "already names another key"},
+		{"key under two kids", []card{
+			{"testnet", issuer, []any{issuerKey("a", keyG)}},
+			{"testnet", issuer, []any{issuerKey("b", keyG)}},
+		}, "is already listed as"},
+		{"key under kids that differ only in case", []card{
+			{"testnet", issuer, []any{issuerKey("k", keyG)}},
+			{"testnet", issuer, []any{issuerKey("K", keyG)}},
+		}, "is already listed as"},
+		{"key of two admin parties", []card{
+			{"testnet", issuer, []any{issuerKey("k", keyG)}},
+			{"testnet", other, []any{issuerKey("k", keyG)}},
+		}, "already used by another admin party"},
+		{"key of two admin parties under two kids", []card{
+			{"testnet", issuer, []any{issuerKey("a", keyG)}},
+			{"testnet", other, []any{issuerKey("b", keyG)}},
+		}, "already used by another admin party"},
+		{"key in two networks of two admin parties", []card{
+			{"testnet", issuer, []any{issuerKey("k", keyG)}},
+			{"mainnet", other, []any{issuerKey("k", keyG)}},
+		}, "use a separate key per network"},
+	} {
+		for _, order := range []string{"forward", "reverse"} {
+			set := entries(tc.cards)
+			if order == "reverse" {
+				slices.Reverse(set)
+			}
+			t.Run(tc.name+"/"+order, func(t *testing.T) {
+				err := ValidateSet(set)
+				if tc.err == "" && err != nil {
+					t.Fatal(err)
+				}
+				if tc.err != "" && (err == nil || !strings.Contains(err.Error(), tc.err)) {
+					t.Fatalf("want an error with %q, got %v", tc.err, err)
+				}
+			})
+		}
+	}
+	a, b := card{"testnet", issuer, []any{issuerKey("2026-11", keyG)}}, card{"testnet", other, []any{issuerKey("2026-11", keyCDS1)}}
+	root := fstest.MapFS{
+		"testnet/a/info.json":       {Data: data(a, "A")},
+		"testnet/a/assets/logo.png": {Data: testPNG(t, 256, 256)},
+		"testnet/b/info.json":       {Data: data(b, "B")},
+		"testnet/b/assets/logo.png": {Data: testPNG(t, 256, 256)},
+	}
+	if _, err := v.ValidateRepository(root); err != nil {
+		t.Fatal(err)
+	}
+	b.keys = []any{issuerKey("2026-11", keyG)}
+	root["testnet/b/info.json"] = &fstest.MapFile{Data: data(b, "B")}
+	if _, err := v.ValidateRepository(root); err == nil || !strings.Contains(err.Error(), "already used by another admin party") {
+		t.Fatalf("one key for two admin parties across the repository: %v", err)
 	}
 }

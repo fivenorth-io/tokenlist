@@ -106,11 +106,14 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 
 // ValidateSet checks uniqueness and issuer consistency within each network. Asset keys must stay
 // unique after lowercasing, because consumers look assets up by the lowercased key. An issuer key
-// can't be on entries in two networks, and an issuer feed ID, ignoring case, is on one entry only.
+// can't be on entries in two networks or of two admin parties in one network. Within an admin
+// party in a network, a key keeps the same kid on every entry, and a kid, ignoring case, names
+// one key. An issuer feed ID, ignoring case, is on one entry only.
 func ValidateSet(entries []Entry) error {
 	keys, identities, paths := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	issuers, urls := map[string]string{}, map[string]string{}
 	keyNetworks, feeds := map[string]string{}, map[string]bool{}
+	keyAdmins, keyKids, kidKeys := map[string]string{}, map[string]string{}, map[string]string{}
 	for _, e := range entries {
 		admin := e.Network + "\x00" + e.AdminParty
 		key, identity := e.Network+"\x00"+strings.ToLower(e.AssetKey), admin+"\x00"+e.InstrumentID
@@ -129,7 +132,17 @@ func ValidateSet(entries []Entry) error {
 			if network, ok := keyNetworks[k.PublicKey]; ok && network != e.Network {
 				return fmt.Errorf("%s: issuer key is already used in %s; use a separate key per network", e.Path, network)
 			}
-			keyNetworks[k.PublicKey] = e.Network
+			if party, ok := keyAdmins[k.PublicKey]; ok && party != e.AdminParty {
+				return fmt.Errorf("%s: issuer key is already used by another admin party in %s; use a separate key per admin party", e.Path, e.Network)
+			}
+			if listed, ok := keyKids[k.PublicKey]; ok && listed != k.Kid {
+				return fmt.Errorf("%s: issuer key %q is already listed as %q; keep one kid per key", e.Path, k.Kid, listed)
+			}
+			kid := admin + "\x00" + strings.ToLower(k.Kid)
+			if publicKey, ok := kidKeys[kid]; ok && publicKey != k.PublicKey {
+				return fmt.Errorf("%s: kid %q already names another key of this admin party; use a new kid for a new key", e.Path, k.Kid)
+			}
+			keyNetworks[k.PublicKey], keyAdmins[k.PublicKey], keyKids[k.PublicKey], kidKeys[kid] = e.Network, e.AdminParty, k.Kid, k.PublicKey
 		}
 		if feed := strings.ToLower(e.IssuerFeedID); feed != "" {
 			if feeds[feed] {
