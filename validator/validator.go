@@ -241,6 +241,25 @@ func validatePNG(root fs.FS, filename string) error {
 	return nil
 }
 
+// ValidateLogo checks the logo an entry points to, relative to its info.json.
+func ValidateLogo(root fs.FS, entry Entry) error {
+	logoPath := path.Join(path.Dir(entry.Path), entry.Logo)
+	logo, err := fs.Stat(root, logoPath)
+	if err != nil {
+		return fmt.Errorf("%s: logo: %w", entry.Path, err)
+	}
+	if !logo.Mode().IsRegular() || logo.Size() == 0 {
+		return fmt.Errorf("%s: logo must be a nonempty regular file", entry.Path)
+	}
+	if logo.Size() > maxLogoBytes {
+		return fmt.Errorf("%s: logo exceeds 2 MB", entry.Path)
+	}
+	if err := validatePNG(root, logoPath); err != nil {
+		return fmt.Errorf("%s: logo: %w", entry.Path, err)
+	}
+	return nil
+}
+
 // ValidateRepository checks all info.json files and referenced logos. Legacy logo-only folders are allowed.
 func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 	var entries []Entry
@@ -285,18 +304,8 @@ func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 		if err != nil {
 			return err
 		}
-		logo, err := fs.Stat(root, path.Join(path.Dir(filename), entry.Logo))
-		if err != nil {
-			return fmt.Errorf("%s: logo: %w", filename, err)
-		}
-		if !logo.Mode().IsRegular() || logo.Size() == 0 {
-			return fmt.Errorf("%s: logo must be a nonempty regular file", filename)
-		}
-		if logo.Size() > maxLogoBytes {
-			return fmt.Errorf("%s: logo exceeds 2 MB", filename)
-		}
-		if err := validatePNG(root, path.Join(path.Dir(filename), entry.Logo)); err != nil {
-			return fmt.Errorf("%s: logo: %w", filename, err)
+		if err := ValidateLogo(root, entry); err != nil {
+			return err
 		}
 		entries = append(entries, entry)
 		return nil
