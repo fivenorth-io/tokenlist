@@ -26,6 +26,8 @@ type Entry struct {
 	RegistryURL  string
 	Logo         string
 	Decimals     int64
+	IssuerKeys   []IssuerKey
+	IssuerFeedID string
 }
 
 type Validator struct{ schema *jsonschema.Schema }
@@ -61,6 +63,11 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	var integers struct {
 		SchemaVersion int    `json:"schemaVersion"`
 		Decimals      *int64 `json:"decimals"`
+		Pricing       struct {
+			Sources []struct {
+				MaxAge *int64 `json:"maxAge"`
+			} `json:"sources"`
+		} `json:"pricing"`
 	}
 	if err := json.Unmarshal(data, &integers); err != nil {
 		return entry, fmt.Errorf("%s: %w", filename, err)
@@ -68,6 +75,13 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 	fields := value.(map[string]any)
 	entry = Entry{Path: filename, Network: fields["network"].(string), AssetKey: fields["assetKey"].(string), AdminParty: fields["adminParty"].(string), InstrumentID: fields["instrumentId"].(string), IssuerName: fields["issuerName"].(string), RegistryURL: fields["registryUrl"].(string), Logo: fields["logo"].(string)}
 	entry.Decimals = *integers.Decimals
+	entry.IssuerKeys, entry.IssuerFeedID = issuerKeys(fields), issuerFeedID(fields)
+	if err := validateReservedKey(entry); err != nil {
+		return entry, err
+	}
+	if err := validateProviderOrder(fields); err != nil {
+		return entry, fmt.Errorf("%s: %w", filename, err)
+	}
 	parts := strings.Split(filename, "/")
 	if !safePath(filename) || len(parts) != 3 || parts[0] != entry.Network || parts[2] != "info.json" {
 		return entry, fmt.Errorf("%s: expected <network>/<asset>/info.json matching network", filename)
@@ -84,16 +98,25 @@ func (v *Validator) Validate(filename string, data []byte) (Entry, error) {
 			return entry, fmt.Errorf("%s: invalid %s", filename, key)
 		}
 	}
+	if err := validateIssuerSigning(entry, fields); err != nil {
+		return entry, fmt.Errorf("%s: %w", filename, err)
+	}
 	return entry, nil
 }
 
-// ValidateSet checks uniqueness and issuer consistency within each network.
+// ValidateSet checks uniqueness and issuer consistency within each network. Asset keys must stay
+// unique after lowercasing, because consumers look assets up by the lowercased key. An issuer key
+// can't be on entries in two networks or of two admin parties in one network. Within an admin
+// party in a network, a key keeps the same kid on every entry, and a kid, ignoring case, names
+// one key. An issuer feed ID, ignoring case, is on one entry only.
 func ValidateSet(entries []Entry) error {
 	keys, identities, paths := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	issuers, urls := map[string]string{}, map[string]string{}
+	keyNetworks, feeds := map[string]string{}, map[string]bool{}
+	keyAdmins, keyKids, kidKeys := map[string]string{}, map[string]string{}, map[string]string{}
 	for _, e := range entries {
 		admin := e.Network + "\x00" + e.AdminParty
-		key, identity := e.Network+"\x00"+e.AssetKey, admin+"\x00"+e.InstrumentID
+		key, identity := e.Network+"\x00"+strings.ToLower(e.AssetKey), admin+"\x00"+e.InstrumentID
 		if keys[key] || identities[identity] || paths[e.Path] {
 			return fmt.Errorf("%s: duplicate asset key, identity, or path", e.Path)
 		}
@@ -105,6 +128,28 @@ func ValidateSet(entries []Entry) error {
 			return fmt.Errorf("%s: inconsistent registryUrl for admin", e.Path)
 		}
 		issuers[admin], urls[admin] = e.IssuerName, e.RegistryURL
+		for _, k := range e.IssuerKeys {
+			if network, ok := keyNetworks[k.PublicKey]; ok && network != e.Network {
+				return fmt.Errorf("%s: issuer key is already used in %s; use a separate key per network", e.Path, network)
+			}
+			if party, ok := keyAdmins[k.PublicKey]; ok && party != e.AdminParty {
+				return fmt.Errorf("%s: issuer key is already used by another admin party in %s; use a separate key per admin party", e.Path, e.Network)
+			}
+			if listed, ok := keyKids[k.PublicKey]; ok && listed != k.Kid {
+				return fmt.Errorf("%s: issuer key %q is already listed as %q; keep one kid per key", e.Path, k.Kid, listed)
+			}
+			kid := admin + "\x00" + strings.ToLower(k.Kid)
+			if publicKey, ok := kidKeys[kid]; ok && publicKey != k.PublicKey {
+				return fmt.Errorf("%s: kid %q already names another key of this admin party; use a new kid for a new key", e.Path, k.Kid)
+			}
+			keyNetworks[k.PublicKey], keyAdmins[k.PublicKey], keyKids[k.PublicKey], kidKeys[kid] = e.Network, e.AdminParty, k.Kid, k.PublicKey
+		}
+		if feed := strings.ToLower(e.IssuerFeedID); feed != "" {
+			if feeds[feed] {
+				return fmt.Errorf("%s: duplicate issuer feed ID %q", e.Path, e.IssuerFeedID)
+			}
+			feeds[feed] = true
+		}
 	}
 	return nil
 }
@@ -209,6 +254,25 @@ func validatePNG(root fs.FS, filename string) error {
 	return nil
 }
 
+// ValidateLogo checks the logo an entry points to, relative to its info.json.
+func ValidateLogo(root fs.FS, entry Entry) error {
+	logoPath := path.Join(path.Dir(entry.Path), entry.Logo)
+	logo, err := fs.Stat(root, logoPath)
+	if err != nil {
+		return fmt.Errorf("%s: logo: %w", entry.Path, err)
+	}
+	if !logo.Mode().IsRegular() || logo.Size() == 0 {
+		return fmt.Errorf("%s: logo must be a nonempty regular file", entry.Path)
+	}
+	if logo.Size() > maxLogoBytes {
+		return fmt.Errorf("%s: logo exceeds 2 MB", entry.Path)
+	}
+	if err := validatePNG(root, logoPath); err != nil {
+		return fmt.Errorf("%s: logo: %w", entry.Path, err)
+	}
+	return nil
+}
+
 // ValidateRepository checks all info.json files and referenced logos. Legacy logo-only folders are allowed.
 func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 	var entries []Entry
@@ -253,18 +317,8 @@ func (v *Validator) ValidateRepository(root fs.FS) ([]Entry, error) {
 		if err != nil {
 			return err
 		}
-		logo, err := fs.Stat(root, path.Join(path.Dir(filename), entry.Logo))
-		if err != nil {
-			return fmt.Errorf("%s: logo: %w", filename, err)
-		}
-		if !logo.Mode().IsRegular() || logo.Size() == 0 {
-			return fmt.Errorf("%s: logo must be a nonempty regular file", filename)
-		}
-		if logo.Size() > maxLogoBytes {
-			return fmt.Errorf("%s: logo exceeds 2 MB", filename)
-		}
-		if err := validatePNG(root, path.Join(path.Dir(filename), entry.Logo)); err != nil {
-			return fmt.Errorf("%s: logo: %w", filename, err)
+		if err := ValidateLogo(root, entry); err != nil {
+			return err
 		}
 		entries = append(entries, entry)
 		return nil

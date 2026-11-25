@@ -7,14 +7,14 @@
   "properties": {
     "schemaVersion": {"const": 1, "description": "Use integer notation."},
     "network": {"enum": ["mainnet", "devnet", "testnet"]},
-    "assetKey": {"allOf": [{"$ref": "#/definitions/text"}, {"pattern": "^[^/,?#\\\\]+$"}]},
-    "adminParty": {"type": "string", "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
+    "assetKey": {"allOf": [{"$ref": "#/definitions/text"}], "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9._ -]*$"},
+    "adminParty": {"type": "string", "maxLength": 255, "pattern": "^[^\\s:]+::1220[0-9a-f]{64}$"},
     "instrumentId": {"$ref": "#/definitions/text"},
     "issuerName": {"$ref": "#/definitions/text"},
     "name": {"$ref": "#/definitions/text"},
-    "symbol": {"$ref": "#/definitions/text"},
+    "symbol": {"allOf": [{"$ref": "#/definitions/text"}], "maxLength": 64},
     "decimals": {"type": "integer", "minimum": 0, "maximum": 10, "description": "Use integer notation."},
-    "logo": {"type": "string", "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
+    "logo": {"type": "string", "maxLength": 256, "pattern": "\\.[pP][nN][gG]$", "description": "Relative PNG path. Square, 128-1024 pixels, at most 2 MB."},
     "website": {"$ref": "#/definitions/https"},
     "registryUrl": {"$ref": "#/definitions/https"},
     "wallet": {
@@ -46,19 +46,44 @@
           "properties": {"type": {"const": "none"}}
         }
       ]
+    },
+    "issuerKeys": {
+      "type": "array", "minItems": 1, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kid", "publicKey"],
+        "properties": {"kid": {"$ref": "#/definitions/kid"}, "publicKey": {"$ref": "#/definitions/secp256k1PublicKey"}}
+      }
     }
   },
   "definitions": {
-    "text": {"type": "string", "minLength": 1, "pattern": "^\\S(?:[\\s\\S]*\\S)?$", "not": {"pattern": "\u0000"}},
-    "https": {"type": "string", "format": "uri", "pattern": "^https://[^/?#@]+(?:[/?][^#]*)?$"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^\\S(?:[\\s\\S]*\\S)?$", "not": {"pattern": "[\u0000-\u001f\u007f]"}},
+    "https": {"type": "string", "format": "uri", "maxLength": 2048, "pattern": "^https://[^/?#@]+(?:[/?][^#]*)?$"},
     "positiveDecimal": {"type": "string", "pattern": "^(0\\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(\\.[0-9]+)?)$"},
+    "kid": {"type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "secp256k1PublicKey": {"type": "string", "pattern": "^3056301006072a8648ce3d020106052b8104000a03420004[0-9a-f]{128}$", "description": "A secp256k1 public key in lowercase hex DER (uncompressed SPKI). Never a private key."},
     "source": {
       "type": "object", "additionalProperties": false, "required": ["provider", "providerAssetId"],
       "properties": {
-        "provider": {"$ref": "#/definitions/text"},
+        "provider": {"enum": ["coinmarketcap", "coingecko", "issuer"]},
         "providerAssetId": {"$ref": "#/definitions/text"},
-        "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"}
-      }
+        "multiplier": {"allOf": [{"$ref": "#/definitions/positiveDecimal"}], "default": "1"},
+        "kind": {"enum": ["market", "nav", "issuer_reference"], "default": "market", "description": "What the quote measures: a traded market price, an issuer-reported NAV, or an issuer-reported reference price. Sources of different kinds are separate series and never stand in for each other."},
+        "maxAge": {"type": "integer", "minimum": 0, "maximum": 604800, "description": "Seconds a quote may age before the consumer asks the next source of the same kind, at most 604800 (7 days). 0 accepts any age. Without it, the consumer uses its own default. Use integer notation."}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"provider": {"const": "coinmarketcap"}}},
+          "then": {"properties": {"providerAssetId": {"pattern": "^[1-9][0-9]*$", "maxLength": 19}}}
+        },
+        {
+          "if": {"properties": {"provider": {"const": "coingecko"}}},
+          "then": {"properties": {"providerAssetId": {"pattern": "^[a-z0-9][a-z0-9._-]*$"}}}
+        },
+        {
+          "if": {"properties": {"provider": {"const": "issuer"}}},
+          "then": {"required": ["kind"], "properties": {"kind": {"enum": ["nav", "issuer_reference"]}, "providerAssetId": {"pattern": "^[a-z]+:[A-Za-z0-9][A-Za-z0-9._/-]*$"}}}
+        }
+      ]
     }
   }
 }

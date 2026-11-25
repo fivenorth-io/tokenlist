@@ -8,10 +8,17 @@ on:
 permissions:
   contents: read
 
+env:
+  # Loop Wallet pins tokenlist in wallet-backend's go.mod, Loop Data in Lighthouse's app/go.mod.
+  # Keep this at the older of the two pins, and bump it only once both apps run the newer
+  # version on every network.
+  PINNED_VALIDATOR_VERSION: v0.1.0
+
 jobs:
   validate:
     name: Validate assets
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,10 +33,37 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25.x'
-          cache-dependency-path: tokenlist/go.sum
+          cache: false
+      - name: Build checks from the base branch
+        if: github.event_name == 'pull_request'
+        working-directory: tokenlist-base
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          go build -o "$RUNNER_TEMP/base/validate-assets" ./cmd/validate-assets
+          if [ -d cmd/check-submission ]; then
+            go build -o "$RUNNER_TEMP/base/check-submission" ./cmd/check-submission
+          elif [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ]; then
+            go -C ../tokenlist build -o "$RUNNER_TEMP/base/check-submission" ./cmd/check-submission
+          fi
+      - name: Check the submission with the base branch rules
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ ! -x "$RUNNER_TEMP/base/check-submission" ]; then
+            echo "::notice::The base branch has no check-submission yet."
+            exit 0
+          fi
+          "$RUNNER_TEMP/base/check-submission" -root tokenlist -base tokenlist-base -summary "$GITHUB_STEP_SUMMARY"
+      - name: Validate PR metadata with the base branch validator
+        if: github.event_name == 'pull_request'
+        run: '"$RUNNER_TEMP/base/validate-assets" -root tokenlist -base tokenlist-base'
+      - name: Validate PR metadata with ${{ env.PINNED_VALIDATOR_VERSION }}, the version Loop Wallet and Loop Data run
+        if: github.event_name == 'pull_request'
+        working-directory: tokenlist
+        run: go run github.com/fivenorth-io/tokenlist/cmd/validate-assets@${{ env.PINNED_VALIDATOR_VERSION }} -root . -base ../tokenlist-base
       - name: Test validator
         working-directory: tokenlist
-        run: go test -race ./...
+        run: go test -race ./validator/... ./cmd/... ./schema/... ./submission/...
       - name: Validate PR metadata and stable keys
         if: github.event_name == 'pull_request'
         working-directory: tokenlist
@@ -38,3 +72,49 @@ jobs:
         if: github.event_name != 'pull_request'
         working-directory: tokenlist
         run: go run ./cmd/validate-assets -root .
+      - name: Validate merged metadata with ${{ env.PINNED_VALIDATOR_VERSION }}, the version Loop Wallet and Loop Data run
+        if: github.event_name != 'pull_request'
+        working-directory: tokenlist
+        run: go run github.com/fivenorth-io/tokenlist/cmd/validate-assets@${{ env.PINNED_VALIDATOR_VERSION }} -root .
+      - name: Check merged metadata
+        if: github.event_name != 'pull_request'
+        working-directory: tokenlist
+        run: go run ./cmd/check-submission -root . -summary "$GITHUB_STEP_SUMMARY"
+
+  verify-issuers:
+    name: Verify against issuers (advisory)
+    needs: validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tokenlist
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: tokenlist-base
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache: false
+      - name: Build the verifier from the base branch
+        working-directory: tokenlist-base
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ -d cmd/verify-issuers ]; then
+            go build -o "$RUNNER_TEMP/base/verify-issuers" ./cmd/verify-issuers
+          elif [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ]; then
+            go -C ../tokenlist build -o "$RUNNER_TEMP/base/verify-issuers" ./cmd/verify-issuers
+          fi
+      - name: Compare added and changed entries with issuer registries and CoinGecko
+        run: |
+          if [ ! -x "$RUNNER_TEMP/base/verify-issuers" ]; then
+            echo "::notice::The base branch has no verify-issuers yet."
+            exit 0
+          fi
+          "$RUNNER_TEMP/base/verify-issuers" -root tokenlist -base tokenlist-base -summary "$GITHUB_STEP_SUMMARY"

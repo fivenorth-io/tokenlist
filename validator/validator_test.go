@@ -53,7 +53,7 @@ func TestMetadata(t *testing.T) {
 						p["currency"], p["value"] = "USD", "1"
 					}
 					if kind == "direct" || kind == "reference" {
-						p["sources"] = []any{map[string]any{"provider": "coinmarketcap", "providerAssetId": "5426"}, map[string]any{"provider": "pyth", "providerAssetId": "feed", "multiplier": "0.01"}}
+						p["sources"] = []any{map[string]any{"provider": "coinmarketcap", "providerAssetId": "5426"}, map[string]any{"provider": "coingecko", "providerAssetId": "solana", "multiplier": "0.01"}}
 					}
 				})
 				if _, err := v.Validate(network+"/beth/info.json", data); err != nil {
@@ -246,6 +246,83 @@ func TestIntegerEncoding(t *testing.T) {
 				}
 			})
 		}
+	}
+	for _, raw := range []string{"900.0", "9e2", "1.00000000000000001", "100000000000000000000"} {
+		t.Run("maxAge/"+raw, func(t *testing.T) {
+			if _, err := v.Validate("testnet/beth/info.json", withSource(t, map[string]any{"maxAge": json.RawMessage(raw)})); err == nil {
+				t.Fatal("accepted a maxAge encoding that consumers cannot decode as int64")
+			}
+		})
+	}
+}
+
+func withSource(t *testing.T, fields map[string]any) []byte {
+	t.Helper()
+	source := map[string]any{"provider": "coinmarketcap", "providerAssetId": "5426"}
+	for key, value := range fields {
+		source[key] = value
+	}
+	return metadata(t, func(m map[string]any) {
+		m["pricing"] = map[string]any{"type": "direct", "sources": []any{source}}
+	})
+}
+
+func TestPricingSourceKindAndMaxAge(t *testing.T) {
+	v := newValidator(t)
+	for name, fields := range map[string]map[string]any{
+		"neither field":    {},
+		"market":           {"kind": "market"},
+		"nav":              {"kind": "nav"},
+		"issuer reference": {"kind": "issuer_reference"},
+		"maxAge zero":      {"maxAge": 0},
+		"kind and maxAge":  {"kind": "market", "maxAge": 900},
+		"maxAge at cap":    {"maxAge": 604800},
+	} {
+		t.Run("valid/"+name, func(t *testing.T) {
+			if _, err := v.Validate("testnet/beth/info.json", withSource(t, fields)); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+	for name, fields := range map[string]map[string]any{
+		"unknown kind":      {"kind": "spot"},
+		"empty kind":        {"kind": ""},
+		"capitalized kind":  {"kind": "Market"},
+		"null kind":         {"kind": nil},
+		"negative maxAge":   {"maxAge": -1},
+		"fractional maxAge": {"maxAge": 1.5},
+		"string maxAge":     {"maxAge": "900"},
+		"null maxAge":       {"maxAge": nil},
+		"maxAge over cap":   {"maxAge": 604801},
+		"maxAge overflow":   {"maxAge": 9223372037},
+	} {
+		t.Run("invalid/"+name, func(t *testing.T) {
+			if _, err := v.Validate("testnet/beth/info.json", withSource(t, fields)); err == nil {
+				t.Fatal("accepted invalid source")
+			}
+		})
+	}
+}
+
+func TestKeysThatDifferOnlyInCase(t *testing.T) {
+	v := newValidator(t)
+	upper, err := v.Validate("testnet/beth/info.json", metadata(t, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lower := upper
+	lower.Path, lower.InstrumentID, lower.AssetKey = "testnet/beth-lower/info.json", "beth-lower", "beth"
+	if ValidateSet([]Entry{upper, lower}) == nil {
+		t.Fatal("accepted two keys in one network that differ only in case")
+	}
+	lower.Network, lower.Path = "mainnet", "mainnet/beth-lower/info.json"
+	if err := ValidateSet([]Entry{upper, lower}); err != nil {
+		t.Fatal("keys in different networks are independent", err)
+	}
+	recased := upper
+	recased.AssetKey = "beth"
+	if ValidateTransition([]Entry{upper}, []Entry{recased}) == nil {
+		t.Fatal("accepted a case-only rename of an existing key")
 	}
 }
 
